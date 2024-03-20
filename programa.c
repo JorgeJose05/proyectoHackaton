@@ -1,133 +1,86 @@
-/*
-Tienes que incluir estas librerias
-#include <stdio.h>
+import time #biblioteca para controlar el tiempo y poder hacer el time.sleep
+import RPi.GPIO as GPIO
+import serial
 
-#include <wiringPi.h> Esta sirve para comunicarse con pines GPIO 
-WiringPi es una biblioteca en C que te permitirá leer los valores analógicos y digitales de los pines GPIO de la Raspberry Pi.
-
-#include <modbus.h> Esto sirve para controlar los MODBUS y la comunicacion entre sensores la placa y la base de datos
-
-
-*/
-
-/*
-Tambien hay que crear un json que es un archivo que dice mas o menos los datos que tendran los 
-sensores y su configuracion y datos de los sensores como estos ejemplos
-{
-  "name": "Sensor de Temperatura",
-  "type": "Analógico",
-  "model": "LM35",
-  "connection": {
-    "gpio_pin": 17
-  },
-  "options": {
-    "units": "Celsius",
-    "resolution": 0.1
-  }
-}
-o el ejemplo de david: los coils se refiere a coils de MODBUS
-
-192.168.1.10{
-    coils{};
-    coils WR{
-        0
-        1
-        2
-        3
-    ney_hold[];
-    ney_read;
-
-192.168.1.10{.......}
-    }
-}
+from loopNutrientes import loopNutrientes #para los puertos serie del sensor de nutrientes
 
 
 
 
-*/
+def setup():
 
-//Defino los pines para saber de donde me viene la informacion el ANALOG_PIN_1 es el nombre del
-//pin y el 0 es el numero del puerto al que lo he conectado (creo que hace falta definir mejor
-//los pines )
-#define ANALOG_PIN 0//poner el pin analogico si lo hago analogico
-#define DIGITAL_PIN_1 //poner el pin digital si se hace por pin digital
-#define DIGITAL_PIN_//poner el pin digital si se hace por pin digital
+    GPIO.setmode(GPIO.BCM)
+#Establece el modo de enumeracion de pines GPIO en numerico (para poder seleccionar los pines)
+   
+    #Pines de loopLluvia
+    global ANALOG_PIN
+    ANALOG_PIN = 0  # Define el pin analógico
+    global DIGITAL_PIN_1 
+    DIGITAL_PIN_1 = 1  # Define el primer pin digital
+    global DIGITAL_PIN_2
+    DIGITAL_PIN_2 = 2  # Define el segundo pin digital
 
+    GPIO.setup(DIGITAL_PIN_1, GPIO.IN)
+    GPIO.setup(DIGITAL_PIN_2, GPIO.IN)
+    GPIO.setup(ANALOG_PIN, GPIO.IN)
 
-
-void loop ();
-
-int main ()
-{
-    wiringPiSetup();//para iniciar la biblioteca y la configuracion de la pines GPIO
-
-    //****Tengo problemas con las variables porque si las declaro no las puedo volver a usar
-    //abajo y por lo tanto en cada loop estoy volviendo a crear variables
-
-
-
-
-
-  while (1)
-	{
-        
-
-
+    #Pines de loopNutrientes
+    #2. Rango de medición: 0-1999 mg/kg (mg/l)
+    global RE 
+    RE = 8
+    GPIO.setup(RE,GPIO.IN)
+    ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)  # Ajusta '/dev/ttyS0' según el puerto serie que estés utilizando
+    # define un objeto como el puerto de seria, el 1er parametro es el puerto se debe cambiar, 
+    #2nd '' es la velocidad pel puerto, y el utlimo es el tiempo de espera maximo
+    # 0-285, 286-571, 572-857, 858-1143, 1144-1429,1430-1700,1701-1999
+    
 
 
-	  loop ();
-	}
+#Esto es para configurarlos para que los pines lean datos
 
-  return 0;
-}
+    global totalTime
+    totalTime=0
 
-void loop ()
-{
+    pass
 
-//leer los datos de la lluvia que hay en ese momento
-        float analogValue = analogRead(ANALOG_PIN);
+def loop():
+    
+    loopTiempoLluvia()
 
-//Lectura de los pines digitales que son menos precisos, sesupone que solo van a devolver un
-//high o un low de lo poco precisos que son por lo que tambien se recomienda usar un bool(boolean)
-        int dig1 = digitalRead(DIGITAL_PIN_);
-        int dig2 = digitalRead(DIGITAL_PIN_1);
-//estos pines digitales seria para comprobar si llueve o no llueve incluso se podria hacer un
-//while con contador para que mientras los digs sean high o no sean low se registre que este lloviendo
-//cuando se llege a low y en un corto tiempo no vuelva a llegar a high pues el contador sera el
-//tiempo que ha llovido y cuando acabe entonces se le enviara a la BBDD el resultado final del
-//contador transformado a dias, horas, minutos seg(si se puede) para saber durante cuanto llueve
+    loopNutrientes()    
 
+    loop()
 
-        float humedad;//= analgogValue (hacerle los calculos necesarios para sacar la humedad)
+#definir un loop para cada dato despues meterlo todo en un loop y al final devolver los datos a
+#la base de datos        
 
+def loopTiempoLluvia () :
+    
+    # Leer los datos del pin analógico (simulado)
+    analogValue = 50
 
-//no es mio
-//Ejemplo de programa que dice durante cuanto a llovido
+    # Leer los datos de los pines digitales (simulado)
+    dig1 = GPIO.input(DIGITAL_PIN_1)
+    dig2 = GPIO.input(DIGITAL_PIN_2)
 
+    # Si no llueve, calcular el tiempo total de lluvia
+    if dig1 != 1:
+        # Calcular el tiempo en días, horas, minutos y segundos
+        dias = totalTime // 86400
+        horas = (totalTime % 86400) // 3600
+        minutos = (totalTime % 3600) // 60
+        segundos = totalTime % 60
 
-        
-        static int totalTime;
-        if(dig1 !=1){
+        # Imprimir el tiempo total de lluvia
+        print(f"Ha llovido durante unos {dias} días, {horas} horas, {minutos} minutos y {segundos} segundos")
 
-            //pasar el totalTime a tiempo
-            //ahhora si me deja declarar y abajo usarlas
-            int horas, segundos,minutos, dias;
+        # Reiniciar el tiempo total
+        totalTime = 0
+    else:
+        # Incrementar el tiempo total
+        totalTime += 1
 
-            //segundos no lo tengo
-            dias = totalTime /86400000;//86400000 porque son los segundos que hay en un dia 
-            horas = (totalTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
-            minutos = (totalTime % (1000 * 60 * 60)) / (1000 * 60);
-            segundos = (totalTime % (1000 * 60)) / 1000;
+    time.sleep(1)  # Esperar 1 segundo antes de repetir el bucle
 
-            printf("Ha llovido durante unos %d dias, %d horas, %d minutos y %d segundos ", dias, horas, minutos, segundos);
+    pass
 
-            static int totalTime = 0;
-        }else{
-            totalTime++;
-        }
-
-
-delay(1000);
-//esto es una espera de un segundo esta porque es cada cuanto tiempo se reproducira el loop
-//deberia estar al final porque es una espera
-}
