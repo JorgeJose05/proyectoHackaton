@@ -1,12 +1,65 @@
 import time #biblioteca para controlar el tiempo y poder hacer el time.sleep
-import RPi.GPIO as GPIO
-import serial
+#import RPi.GPIO as GPIO
+#Instalar con 
+#pip install RPi.GPIO
+
+#import serial
+#pip install pyserial
+
+import mysql.connector #para conectar con la base de datos
+#hay que instalar con este comando 
+#pip install mysql-connector-python
 
 from loopNutrientes import loopNutrientes
 from loopSol import loopSol #para los puertos serie del sensor de nutrientes
 
 
+# Configuración de la base de datos
+db_config = {
+    "host": "taxistahosting.com",
+    "port": 3306,
+    "user": "testing",
+    "password": "digital!",
+    "database": "nombre_de_tu_base_de_datos" #Falta esto
+}
 
+# Función para inicializar la conexión a la base de datos
+def connect_database():
+    try:
+        conexion = mysql.connector.connect(**db_config)#asignarle la base de datos configurada
+        print("Conexión exitosa a la base de datos")
+        return conexion
+    except mysql.connector.Error as err:
+        print(f"Error al conectar a la base de datos: {err}")
+        return None
+    #Comprobacion de conexion 
+
+# Función para insertar datos de lluvia en la base de datos
+def insert_lluvia_data(conexion, dias, horas, minutos, segundos, medialluvia):
+    cursor = conexion.cursor() #Crea objeto cursor que hace consultas a la base de datos
+    consulta = "INSERT INTO datos_lluvia (dias, horas, minutos, segundos, medialluvia) VALUES (%s, %s, %s, %s, %s)"
+    #Se hace una consulta de insrcion
+    valores = (dias, horas, minutos, segundos, medialluvia)#los valores que vamos a meter en orden
+    try:
+        cursor.execute(consulta, valores)#el cursor ejecuta la consulta
+        conexion.commit()#asegura la conexion hhaciendo que se guarden en la base de datos permanentemente
+        print("Datos de lluvia insertados en la base de datos")
+    except mysql.connector.Error as err:
+        print(f"Error al insertar datos de lluvia: {err}")
+    cursor.close()
+
+
+def insert_nutrient_data(conexion, nitrogen, phosphorous, potassium):
+    cursor = conexion.cursor()
+    consulta = "INSERT INTO datos_nutrientes (nitrogeno, fosforo, potasio) VALUES (%s, %s, %s)"
+    valores = (nitrogen, phosphorous, potassium)
+    try:
+        cursor.execute(consulta, valores)
+        conexion.commit()
+        print("Datos de nutrientes insertados en la base de datos")
+    except mysql.connector.Error as err:
+        print(f"Error al insertar datos de nutrientes: {err}")
+    cursor.close()
 
 def setup():
 
@@ -47,6 +100,15 @@ def setup():
     global ANALOG_PIN_7
     ANALOG_PIN_7 = 7 # Definir el pin analogico del sensor de radiacion solar
     GPIO.setup(ANALOG_PIN_7, GPIO.IN)
+
+
+
+    # Conectar a la base de datos
+    global conexion_db
+    conexion_db = connect_database()
+
+    #Creo que al final tiene que llamar al loop para que se le llame
+    loop()
     pass
 
 def loop():
@@ -66,14 +128,17 @@ def loopTiempoLluvia () :
     # Leer los datos del pin analógico (simulado)
     analogValue = GPIO.input(ANALOG_PIN)
 
-    medialluvia +=analogValue
+
+    analogValue = (analogValue* 60)/256  #Ejemplo cada bit son 60 ml
+    
+    medialluvia = medialluvia+ analogValue
 
     # Leer los datos de los pines digitales (simulado)
     dig1 = GPIO.input(DIGITAL_PIN_1)
     dig2 = GPIO.input(DIGITAL_PIN_2)
 
     # Si no llueve, calcular el tiempo total de lluvia
-    if dig1 != 1:
+    if dig1 <= 1:
         # Calcular el tiempo en días, horas, minutos y segundos
         dias = totalTime // 86400
         horas = (totalTime % 86400) // 3600
@@ -89,11 +154,13 @@ def loopTiempoLluvia () :
 # entonces se divide el numero de bits que envia por los ml maximos de lectura y eso es son los
         #ml que vale cada bit. Por ahora pondre una division estandar de los bits del sensor
         
-        medialluvia=medialluvia/60#Ejemplo cada bit son 60 ml
+        medialluvia/=totalTime
+        insert_lluvia_data(conexion_db, dias, horas, minutos, segundos, medialluvia)
 
         print("Han llovido 60 ml de media")
         # Reiniciar el tiempo total
         totalTime = 0
+        medialluvia= 0
     else:
         # Incrementar el tiempo total
         totalTime += 1

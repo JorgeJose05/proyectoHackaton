@@ -1,4 +1,21 @@
 #primero copiar el codigo a python y despues poner las funciones
+import time
+import serial
+import mysql.connector
+import RPi.GPIO as GPIO
+
+def insert_nutrient_data(conexion, nitrogen, phosphorus, potassium):
+    cursor = conexion.cursor()
+    consulta = "INSERT INTO datos_nutrientes (nitrogeno, fosforo, potasio) VALUES (%s, %s, %s)"
+    valores = (nitrogen, phosphorus, potassium)
+    try:
+        cursor.execute(consulta, valores)
+        conexion.commit()
+        print("Datos de nutrientes insertados en la base de datos")
+    except mysql.connector.Error as err:
+        print(f"Error al insertar datos de nutrientes: {err}")
+    cursor.close()
+
 
 def loopNutrientes():
 
@@ -33,11 +50,10 @@ def loopNutrientes():
     potasiumFinal*=7.83921568627
     #multiplico por 7.83921568627 porque son los mg que hay por cada bit de el byte de 7
 
-
-    System.out.println("Ya sepuede enviar los datos a la base de datos")
-    System.out.println("El nitrogeno es ", nitrogenFinal)
-    System.out.println("El fosforo es ", phosphorousFinal)
-    System.out.println("EL potasio es ", potasiumFinal)
-
+    insert_nutrient_data(conexion_db, nitrogenFinal, phosphorousFinal, potasiumFinal)
+    print("Ya sepuede enviar los datos a la base de datos")
+    print("El nitrogeno es ", nitrogenFinal)
+    print("El fosforo es ", phosphorousFinal)
+    print("EL potasio es ", potasiumFinal)
 
     pass

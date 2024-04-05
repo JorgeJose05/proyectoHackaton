@@ -14,16 +14,14 @@ def loopSol():
         radiacion=radiacion*(7*8)#porque 1 byte son 8 bits y 7 es lo que vale cada bit
 
         if radiacion>400:
-            
+            if radiacion >=1000:
+                  print("La radiacion llega a 1000 micromoles activar toldo")
+            else:
+                print("La radiacion solar es " + radiacion + " esta dentro del nivel estable")    
+        
+        else:
             if radiacion <200:
                 print("La radiacion es muy poca no hay suficiente luz solar")
-            
-            else:
-                
-                print("La radiacion solar es " + radiacion + " esta dentro del nivel estable")    
-
-                if radiacion >=100:
-                  print("La radiacion llega a 100o micromoles activar toldo")
 
     else:
             print("No se detecta radiacion solar o es de noche o hay un problema")
