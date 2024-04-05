@@ -1,0 +1,65 @@
+Para crear la base de datos se hhace el punto 1**--, si ya esta hecha puedes ejecutarlo igualmente porque es un if que si hay base de datos la crea y si no no y el segundo punto lo mismo pero con la tabla.
+La cosa es que ejecutes el primer y el segundo punto a la vez uno encima de otro y se te creara despues puedes probar a meter codigo con el cuarto punto y hacer consultas con el quinto
+
+
+1**--CODIGO PARA CREAR LA BASE DE DATOS
+CREATE DATABASE IF NOT EXISTS basePyt;
+
+USE BASEdeDatosSensores;
+
+
+2**--CODIGO PARA CREAR LA TABLA
+CREATE TABLE IF NOT EXISTS DatosColumn (
+    sensor_id INT PRIMARY KEY,
+    dia INT,
+    hora INT,
+    minuto INT,
+    segundo INT,
+    medialluvia DOUBLE,
+    nitrogenFinal DOUBLE,
+    phosphorousFinal DOUBLE,
+    potassiumFinal DOUBLE,
+    radiacionSolar DOUBLE
+);
+
+3**--CODIGO EN PHP
+$sql = "CREATE TABLE IF NOT EXISTS DatosColumn (\n"
+
+    . "    sensor_id INT PRIMARY KEY,\n"
+
+    . "    dia INT,\n"
+
+    . "    hora INT,\n"
+
+    . "    minuto INT,\n"
+
+    . "    segundo INT,\n"
+
+    . "    medialluvia DOUBLE,\n"
+
+    . "    nitrogenFinal DOUBLE,\n"
+
+    . "    phosphorousFinal DOUBLE,\n"
+
+    . "    potassiumFinal DOUBLE,\n"
+
+    . "    radiacionSolar DOUBLE\n"
+
+    . ");";
+
+4**--CODIGO PARA METER DATOS EN LA BASE DE DATOS Y YA DESPUES SE PUEDE HACER UNA CONSULTA
+INSERT INTO DatosColumn (sensor_id, dia, hora, minuto, segundo, medialluvia, nitrogenFinal, phosphorousFinal, potassiumFinal, radiacionSolar) 
+VALUES 
+(1, 5, 12, 30, 45, 15.5, 25.3, 10.8, 5.7, 1200.5),
+(2, 5, 12, 30, 46, 12.2, 24.5, 11.3, 6.1, 1150.2),
+(3, 5, 12, 30, 47, 14.8, 23.9, 12.1, 5.5, 1185.7);
+
+4**--CONSULTA BASICA DE PRUEBA
+SELECT *
+FROM DatosColumn
+
+
+
+
+
+

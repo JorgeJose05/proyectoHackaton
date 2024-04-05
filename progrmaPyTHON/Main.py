@@ -13,6 +13,7 @@ import mysql.connector #para conectar con la base de datos
 from loopNutrientes import loopNutrientes
 from loopSol import loopSol #para los puertos serie del sensor de nutrientes
 
+#La base de datos tendra 5 + 3 + 1 = 9 columnas
 
 # Configuración de la base de datos
 db_config = {
@@ -20,7 +21,7 @@ db_config = {
     "port": 3306,
     "user": "testing",
     "password": "digital!",
-    "database": "nombre_de_tu_base_de_datos" #Falta esto
+    "database": "basePyt" 
 }
 
 # Función para inicializar la conexión a la base de datos
