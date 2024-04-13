@@ -9,7 +9,7 @@ import serial
 import mariadb #para conectar con la base de datos
 #hay que instalar con este comando 
 #$ pip3 install mariadb
-
+from datetime import timedelta
 
 #La base de datos tendra 5 + 3 + 1 = 9 columnas
 
@@ -34,11 +34,26 @@ def connect_database():
     #Comprobacion de conexion 
 
 # Función para insertar datos de lluvia en la base de datos
+'''
 def insert_lluvia_data(conexion, dias, horas, minutos, segundos, medialluvia):
+
     cursor = conexion.cursor() #Crea objeto cursor que hace consultas a la base de datos
     consulta = "INSERT INTO datos_lluvia (dias, horas, minutos, segundos, medialluvia) VALUES (?, ?, ?, ?, ?)"
     #Se hace una consulta de insrcion
     valores = (dias, horas, minutos, segundos, medialluvia)#los valores que vamos a meter en orden
+    try:
+        cursor.execute(consulta, valores)#el cursor ejecuta la consulta
+        conexion.commit()#asegura la conexion hhaciendo que se guarden en la base de datos permanentemente
+        print("Datos de lluvia insertados en la base de datos")
+    except mariadb.Error as e:
+        print(f"Error al insertar datos de lluvia: {e}")
+    cursor.close()
+'''
+def insert_lluvia_data(conexion, fecha, medialluvia):
+    cursor = conexion.cursor() #Crea objeto cursor que hace consultas a la base de datos
+    consulta = "INSERT INTO datos_lluvia (fecha,  medialluvia) VALUES (?, ?)"
+    #Se hace una consulta de insrcion
+    valores = (fecha, medialluvia)#los valores que vamos a meter en orden
     try:
         cursor.execute(consulta, valores)#el cursor ejecuta la consulta
         conexion.commit()#asegura la conexion hhaciendo que se guarden en la base de datos permanentemente
@@ -121,7 +136,7 @@ def setup():
 
     global llovio
     llovio= True
-
+    global fecha
     
 
     #Creo que al final tiene que llamar al loop para que se le llame
@@ -165,7 +180,7 @@ def loopTiempoLluvia () :
         
         # Imprimir el tiempo total de lluvia
             print(f"Ha llovido durante unos {dias} días, {horas} horas, {minutos} minutos y {segundos} segundos")
-
+            fecha = timedelta(days=dias, hours=horas, minutes=minutos, seconds=segundos)
         #Imprimir la cantidad de lluvia
         #Para esto hay que comparar el rango de bits(ej 0-1023) del sensor con cuantos ml representa un
         #bit que le el sensor, o la capacidad maxima de lectura de ml ==  la capacidad de mandar bits
@@ -173,7 +188,8 @@ def loopTiempoLluvia () :
         #ml que vale cada bit. Por ahora pondre una division estandar de los bits del sensor
         
             medialluvia/=totalTime
-            insert_lluvia_data(conexion_db, dias, horas, minutos, segundos, medialluvia)
+            #insert_lluvia_data(conexion_db, dias, horas, minutos, segundos, medialluvia)
+            insert_lluvia_data(conexion_db, fecha, medialluvia)
 
             print("Han llovido 60 ml de media")
             # Reiniciar el tiempo total
